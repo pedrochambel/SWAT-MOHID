@@ -76,6 +76,7 @@ Module ModuleSwat
         logical                                     :: GlobalNutrientsCumulative
         logical                                     :: BasinAverage
         logical                                     :: UsleOutputOn
+        logical                                     :: ChangeMGT
 		logical										:: LandUse
 		logical										:: NutrientPerHRU
 
@@ -431,6 +432,7 @@ Module ModuleSwat
                             SwatWithChanges,            &
                             DenitrificationThreshold,   &
                             LateralFlowTravelTime,      &
+                            ChangeMGT,                  &
                             STAT)
 
         !Arguments---------------------------------------------------------------
@@ -439,6 +441,7 @@ Module ModuleSwat
         logical, intent(OUT)                            :: SwatWithChanges
         real                                            :: DenitrificationThreshold  
         real                                            :: LateralFlowTravelTime 
+        logical                                         :: ChangeMGT
 
         !External----------------------------------------------------------------
         integer                                         :: ready_         
@@ -472,6 +475,7 @@ cd0 :   if (ready_ .EQ. OFF_ERR_) then
             call ReadKeywords
 
             SwatWithChanges = Me%SwatOptions%SwatWithChanges
+            ChangeMGT       = Me%SwatOptions%ChangeMGT
 
             DenitrificationThreshold = Me%HRU%DenitrificationThreshold
             LateralFlowTravelTime    = Me%HRU%LateralFlowTravelTime
@@ -547,8 +551,8 @@ cd0 :   if (ready_ .EQ. OFF_ERR_) then
 			    a5,a1,a5,a1,a5,a1,a5,a1,a5,a1,&
 			    a5,a1,a5,a1,a5,a1,a5,a1,a5,a1)
 
-				open(unit=2222,file='error2.txt')
-							write(2222,9999) "hru,",&
+				open(unit=222,file='error2.txt')
+							write(222,9999) "hru,",&
 							"sub,",&
 							"Year,", &
 							"Month,",&
@@ -608,7 +612,6 @@ cd0 :   if (ready_ .EQ. OFF_ERR_) then
         integer                                         :: STAT_CALL
         integer                                         :: iflag
         logical                                         :: dummy
-        logical                                         :: ChangeMGT
         !------------------------------------------------------------------------
 
         call ConstructEnterData(EnterDataID = Me%ObjEnterData, &
@@ -856,7 +859,7 @@ cd0 :   if (ready_ .EQ. OFF_ERR_) then
                      STAT           = STAT_CALL)             
         if (STAT_CALL .NE. SUCCESS_)stop 'StartSwat - ERR03'
 
-        call GetData(ChangeMGT,                                  &
+        call GetData(Me%SwatOptions%ChangeMGT,                                  &
                      Me%ObjEnterData,                                           &
                      flag           = iflag,                                    &
                      SearchType     = FromFile,                                 &
@@ -866,8 +869,14 @@ cd0 :   if (ready_ .EQ. OFF_ERR_) then
                      STAT           = STAT_CALL)             
         if (STAT_CALL .NE. SUCCESS_)stop 'StartSwat - ERR03'
 
-        if (ChangeMGT) then
-            write(*,*) 'CHANGE_MGT option is NO LONGER active'
+        if (Me%SwatOptions%ChangeMGT) then
+            write(*,*) 'You are replacing "kill/end of growing season" operation' 
+            write(*,*) 'by "harvest and kill" operation' 
+            write(*,*) 'This is only to be used with some specific managment files'
+            write(*,*) 'Please check in mohid source safe, other tools\SWAT\Management files'
+            write(*,*) 'To use SWAT default values remove keyword "CHANGE_MGT" '
+            write(*,*) 'in file OutPuts.dat'
+            write(*,*) '---------------######----------------'
         endif
 
         call GetData(Me%SwatOptions%LandUse,                                    &
@@ -2716,7 +2725,7 @@ if4 :           if (BlockFound) then
 							
 								year = year						
 
-									write(2222,888)	&
+									write(222,888)	&
 									j		,",",&
 									i		,",",&
 									year_old	,",",&
